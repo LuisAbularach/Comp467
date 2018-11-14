@@ -7,14 +7,14 @@ def main():
     #Test with image
     dir = "test_images/"
     # Load the jpg file into a numpy array
-    image = face_recognition.load_image_file(dir + sys.argv[1] + ".png")
-    facial_features = isLookingForward(image)
+    image = face_recognition.load_image_file(dir + sys.argv[1] + ".jpg")
+    facial_features = getNose(image)
     display(facial_features)
 
 
-def isLookingForward(image):
+def getNose(image):
     print ('starting isForward')
-    face_landmarks_list = face_recognition.face_landmarks(image)
+    face_landmarks_list = face_recognition.face_landmarks(image,model="small")
 
     pil_image = Image.fromarray(image)
     d = ImageDraw.Draw(pil_image)

@@ -116,7 +116,13 @@ while True:
             else:
                 color = (0,255,255)
                 TextColor = (0, 0, 0)
-            
+
+        #Get pos of nose    
+        center = int((left+right)/2), int((top+(bottom - 70))/2)
+        #Get radius
+        radius = int(((bottom-70) - top)/5)
+        
+        nose[] = face_forward.getNose(frame)
 
         # Draw a bounding box around the face
         cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
@@ -124,6 +130,7 @@ while True:
 
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 70), (right, bottom), color, cv2.FILLED)
+        cv2.circle(frame,center, radius, color)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 38), font, 1.2, TextColor, 1)
         cv2.putText(frame, "Priority: " +  str(priority), (left + 6, bottom - 6), font, 0.8, TextColor, 1)
