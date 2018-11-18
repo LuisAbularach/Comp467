@@ -9,3 +9,7 @@ python real_time.py
 ``
 
 OpenCV is only needed for the realtime video,face_forward can be done on a premade image and later applied to the frames of the video
+
+
+Google doc:
+https://docs.google.com/document/d/1D86WATNAzA41q1BJhBM0U32pX9dtJmqNk8vl003Gsc0/edit?usp=sharing
