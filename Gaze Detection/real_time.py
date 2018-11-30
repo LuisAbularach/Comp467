@@ -1,6 +1,7 @@
 import face_forward
 import face_recognition
 import cv2
+import os
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
@@ -10,8 +11,19 @@ known_face_encodings = []
 known_face_names = []
 
 # Initialize some variables
-storage = "caught/"
-Suspects = "Suspects/"
+storage = "caught"
+Suspects = "Suspects"
+
+try:  
+    os.makedirs(storage)
+    os.makedirs(Suspects)
+except OSError:  
+    print("Directories Already Exist")
+    # print ("Creation of the directory %s and %s failed" % storage,Suspects)
+else:  
+    print("Caught and Suspects directory created")
+    # print ("Successfully created the directories %s and %s" % storage, Suspects)
+
 face_locations = []
 face_encodings = []
 face_names = []
@@ -29,8 +41,8 @@ while True:
     ret, frame = video_capture.read()
 
     # Resize frame of video to 1/4 size for faster face recognition processing
-    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-    frame = cv2.resize(frame, (0, 0), fx=2, fy=2)
+    small_frame = face_forward.transform(frame, 'small')
+    frame = face_forward.transform(frame, 'big')
 
     # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
     rgb_small_frame = small_frame[:, :, ::-1]
@@ -67,9 +79,9 @@ while True:
             #If it wasn't add person jpg
             else:
                 suspect_num += 1
-                cv2.imwrite(storage + "suspect_" + str(suspect_num) + ".jpg", frame)
+                cv2.imwrite(storage + "/suspect_" + str(suspect_num) + ".jpg", frame)
                 #load captured image
-                suspect_image = face_recognition.load_image_file(storage + "suspect_" + str(suspect_num) + ".jpg")
+                suspect_image = face_recognition.load_image_file(storage + "/suspect_" + str(suspect_num) + ".jpg")
                 suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
                 #Initialize suspition level
                 suspicion_levels.append(0)
@@ -122,7 +134,7 @@ while True:
         #Get radius
         radius = int(((bottom-70) - top)/5)
         
-        nose[] = face_forward.getNose(frame)
+        #nose[] = face_forward.getNose(frame)
 
         # Draw a bounding box around the face
         cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
@@ -140,7 +152,7 @@ while True:
 
     if priority == 30:
         #Send image notification
-        cv2.imwrite(Suspects + "suspect_" + str(suspect_num) + ".jpg", frame)
+        cv2.imwrite(Suspects + "/suspect_" + str(suspect_num) + ".jpg", frame)
 
     # Hit 'q' on the keyboard to quit!
     if cv2.waitKey(1) & 0xFF == ord('q'):
