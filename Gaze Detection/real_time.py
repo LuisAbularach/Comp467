@@ -1,6 +1,8 @@
+from __future__ import division
 import face_forward
 import face_recognition
 import cv2
+import sys
 import os
 
 # Get a reference to webcam #0 (the default one)
@@ -32,6 +34,7 @@ process_this_frame = True
 suspect_num = 0
 priority = "0"
 solid = True
+initial = True
 
 #We will only anylyze every 5 frames facial features
 frame_count = 0
@@ -41,8 +44,18 @@ while True:
     ret, frame = video_capture.read()
 
     # Resize frame of video to 1/4 size for faster face recognition processing
-    small_frame = face_forward.transform(frame, 'small')
-    frame = face_forward.transform(frame, 'big')
+    resize_small = .25
+    small_frame = face_forward.transform(frame,resize_small)
+
+    #Make frame big given arg
+    if  initial:
+        print("STARTING AT DEFULT CAMERA SIZE 1\n -use W to increase and S to decrease-")
+        video_size = 1
+    frame = face_forward.transform(frame, video_size)
+
+    #Get transformation number
+    t = int(round(float(video_size)/resize_small))
+
 
     # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
     rgb_small_frame = small_frame[:, :, ::-1]
@@ -89,6 +102,8 @@ while True:
                 #add it to list of known faces
                 known_face_encodings.append(suspect_face_encoding)
                 known_face_names.append("SUSPECT_" + str(suspect_num))
+
+
             face_names.append(name)
 
     process_this_frame = not process_this_frame
@@ -100,10 +115,10 @@ while True:
         # frame = face_forward.isLookingForward(frame)
         
         # Blow the box to the size of video feed
-        top *= 8
-        right *= 8
-        bottom *= 8
-        left *= 8
+        top *= t
+        right *= t
+        bottom *= t
+        left *= t
 
         priority = int(priority)
         #Set color of bounding box
@@ -158,9 +173,27 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+    # Resize with numbers
+    initial = False
+    if cv2.waitKey(1) & 0xFF == ord('w'):
+        video_size += 1
+        print("Video_size is: "+ str(video_size))
+    if cv2.waitKey(1) & 0xFF == ord('s'):
+        if video_size > 1:
+            video_size -= 1
+        print("Video_size is: "+ str(video_size))
+    # elif cv2.waitKey(1) & 0xFF == ord('2'):
+    #     video_size = 2
+    # elif cv2.waitKey(1) & 0xFF == ord('3'):
+    #     video_size = 3
+    # elif cv2.waitKey(1) & 0xFF == ord('4'):
+    #     video_size = 4
+
 # Release handle to the webcam
 video_capture.release()
 cv2.destroyAllWindows()
 
 def drawCircle(image, center, radius):
     cv2.circle(image, center, radius, color, thickness=1, lineType=8, shift=0)
+
+print("Program Closed")
