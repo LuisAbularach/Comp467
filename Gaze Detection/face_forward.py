@@ -64,12 +64,9 @@ def display(image):
     # image.show()
 
 def transform(image, size):
-    if size is "small":
-        #Shrink image to a fourth of the size to process faster
-        image = cv2.resize(image, (0, 0), fx=0.25, fy=0.25)
-    else:
-        #Shrink image to a fourth of the size to process faster
-        image = cv2.resize(image, (0, 0), fx=2, fy=2)
+    #Shrink image to a fourth of the size to process faster
+    image = cv2.resize(image, (0, 0), fx=size, fy=size)
+    
     return image
 
 if __name__ == '__main__':
