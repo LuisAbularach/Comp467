@@ -5,6 +5,7 @@ import cv2
 import sys
 import os
 
+print ("Luis is awesome")
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 
