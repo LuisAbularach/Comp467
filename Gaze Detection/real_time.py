@@ -5,6 +5,7 @@ import cv2
 import sys
 import os
 
+print ("Luis is awesome")
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 
@@ -95,13 +96,17 @@ while True:
                 cv2.imwrite(storage + "/suspect_" + str(suspect_num) + ".jpg", frame)
                 #load captured image
                 suspect_image = face_recognition.load_image_file(storage + "/suspect_" + str(suspect_num) + ".jpg")
-                suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
-                #Initialize suspition level
-                suspicion_levels.append(0)
-                print("Suspect priorities: "+ str(suspicion_levels))
-                #add it to list of known faces
-                known_face_encodings.append(suspect_face_encoding)
-                known_face_names.append("SUSPECT_" + str(suspect_num))
+                if len(face_recognition.face_encodings(suspect_image))==1:
+                    suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
+                    #Initialize suspition level
+                    suspicion_levels.append(0)
+                    print("Suspect priorities: "+ str(suspicion_levels))
+                    #add it to list of known faces
+                    known_face_encodings.append(suspect_face_encoding)
+                    known_face_names.append("SUSPECT_" + str(suspect_num))
+                else:
+                    print("ERROR: Image captured but no person detected")
+                
 
 
             face_names.append(name)
