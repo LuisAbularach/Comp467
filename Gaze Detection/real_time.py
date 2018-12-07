@@ -5,7 +5,7 @@ import cv2
 import sys
 import os
 
-print ("Luis is awesome")
+
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 
@@ -81,7 +81,7 @@ while True:
                 # print(str(suspicion_levels[first_match_index]))
                 #only inciment priority once every 10 frames
                 suspicion_levels[first_match_index] += 1
-                if suspicion_levels[first_match_index]%2 == 0:
+                if suspicion_levels[first_match_index]%10 == 0:
                     priority = int(suspicion_levels[first_match_index]/10)
                     if solid:
                         solid = False
@@ -89,6 +89,9 @@ while True:
                         solid = True
                     # print(str(priority))
 
+                #Clean out duplicates from storage container every 30 seconds
+                # if suspicion_levels[first_match_index]%30 == 0:
+                #     cleanUp()
 
             #If it wasn't add person jpg
             else:
@@ -96,7 +99,7 @@ while True:
                 cv2.imwrite(storage + "/suspect_" + str(suspect_num) + ".jpg", frame)
                 #load captured image
                 suspect_image = face_recognition.load_image_file(storage + "/suspect_" + str(suspect_num) + ".jpg")
-                if len(face_recognition.face_encodings(suspect_image))==1:
+                if len(face_recognition.face_encodings(suspect_image))>=1:
                     suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
                     #Initialize suspition level
                     suspicion_levels.append(0)
@@ -150,7 +153,7 @@ while True:
                 TextColor = (0, 0, 0)
 
         #Get pos of nose    
-        center = int((left+right)/2), int((top+(bottom - 70))/2)
+        center = int((left+right)/2), int((top+(bottom - 25))/2)
         #Get radius
         radius = int(((bottom-70) - top)/5)
         
@@ -162,7 +165,7 @@ while True:
 
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 70), (right, bottom), color, cv2.FILLED)
-        cv2.circle(frame,center, radius, color)
+        cv2.circle(frame,center, radius, (255,255,255),  thickness=4)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 38), font, 1.2, TextColor, 1)
         cv2.putText(frame, "Priority: " +  str(priority), (left + 6, bottom - 6), font, 0.8, TextColor, 1)
@@ -172,7 +175,7 @@ while True:
 
     if priority == 30:
         #Send image notification
-        cv2.imwrite(Suspects + "/suspect_" + str(suspect_num) + ".jpg", frame)
+        cv2.imwrite(Suspects + "/suspect_" + ".jpg", frame)
 
     # Hit 'q' on the keyboard to quit!
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -187,12 +190,7 @@ while True:
         if video_size > 1:
             video_size -= 1
         print("Video_size is: "+ str(video_size))
-    # elif cv2.waitKey(1) & 0xFF == ord('2'):
-    #     video_size = 2
-    # elif cv2.waitKey(1) & 0xFF == ord('3'):
-    #     video_size = 3
-    # elif cv2.waitKey(1) & 0xFF == ord('4'):
-    #     video_size = 4
+
 
 # Release handle to the webcam
 video_capture.release()
