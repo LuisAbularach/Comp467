@@ -161,15 +161,15 @@ while True:
             #Check if all nose point tips are in the circle
             for x in nosePointPts:
                 inCircle1 = face_forward.nose_inCircle(x, center, radius)
-                cv2.line(frame,center,x, (255,255,255),1)
+                #cv2.line(frame,center,x, (255,255,255),1)
                 if inCircle1 == False:
                     looking = False
             #Check if the low nose bridge point is in the circle
             inCircle2 = face_forward.nose_inCircle(noseBridgePts[3], center, radius)
-            cv2.line(frame,center,noseBridgePts[3], (255,255,255),1)
+            #cv2.line(frame,center,noseBridgePts[3], (255,255,255),1)
             if inCircle2 == False:
                 looking = False
-        print(looking)
+        #print(looking)
         if looking == True:
             if priority<2:
                 add = 0.20
