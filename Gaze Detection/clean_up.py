@@ -17,8 +17,11 @@ def cleanUp():
         # Iterates from suspect_2 to the last suspect
         for suspects in range(2,fileCount+1):
             image,i = loadNextImage(i)
-            imageEncoding = face_recognition.face_encodings(image)[0]
-                
+            try:
+                imageEncoding = face_recognition.face_encodings(image)[0]
+            except IndexError:
+                print("there are no detected faces")
+                continue        
             # results is a boolean array that compares the encoding with each individual suspect
             results = face_recognition.compare_faces(individual_suspects, imageEncoding)
             if(not True in results):
