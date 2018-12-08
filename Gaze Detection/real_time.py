@@ -37,6 +37,14 @@ priority = 0
 solid = True
 initial = True
 
+# Checks if a face encoding exists in current known face encodings
+def checkDupe(face_encoding):
+    results = face_recognition.compare_faces(known_face_encodings, face_encoding)
+    if(not True in results):
+        return False
+    else:
+        return True
+
 #We will only anylyze every 5 frames facial features
 frame_count = 0
 
@@ -106,6 +114,21 @@ while True:
                 known_face_encodings.append(suspect_face_encoding)
                 known_face_names.append("SUSPECT_" + str(suspect_num))
 
+                if(len(face_recognition.face_encodings(suspect_image)) != 0):
+                    suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
+                    # Removes frame from storage if encoding returns duplicate
+                    if(checkDupe(suspect_face_encoding)):
+                        print("captured frame is a duplicate. Removing...")
+                        os.remove(storage + "/suspect_" + str(suspect_num) + ".jpg")
+                        suspect_num -= 1
+                        continue
+                    #Initialize suspition level
+                    suspicion_levels.append(0)
+                    print("Suspect priorities: "+ str(suspicion_levels))
+                    #add it to list of known faces
+                    known_face_encodings.append(suspect_face_encoding)
+                    known_face_names.append("SUSPECT_" + str(suspect_num))
+                    print("suspect_" + str(suspect_num) + " detected")
 
             face_names.append(name)
 

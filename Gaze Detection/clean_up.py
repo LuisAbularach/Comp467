@@ -1,13 +1,12 @@
 import face_recognition
 import os  
 
-dir = "caught/"
-files = os.listdir(dir)
-fileCount = len(files)
-print("num of images: " + str(fileCount))
 
 # Removes duplicates of suspects
 def cleanUp(): 
+    dir = "caught/"
+    fileCount = len(os.listdir(dir))
+    print("num of images: " + str(fileCount))
     if(os.path.exists(dir + "suspect_1.jpg")):
         # Adds suspect_1 to the individual suspects array
         suspect1 = face_recognition.load_image_file(dir + "suspect_1.jpg")
