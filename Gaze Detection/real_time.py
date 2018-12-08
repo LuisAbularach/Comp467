@@ -1,13 +1,25 @@
 from __future__ import division
+from subprocess import Popen, PIPE
+
 import face_forward
 import face_recognition
 import cv2
 import sys
 import os
+import math
+import argparse
+
+drawCricle = False
+video_size = 2
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-d", "--detection-method", type=str, default="hog",
+                help="face detection model to use: either `hog` (light) or `cnn` (heavy)")
 
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
+args = vars(ap.parse_args())
 
 # Create arrays of known face encodings and their names
 known_face_encodings = []
@@ -22,10 +34,8 @@ try:
     os.makedirs(Suspects)
 except OSError:  
     print("Directories Already Exist")
-    # print ("Creation of the directory %s and %s failed" % storage,Suspects)
 else:  
     print("Caught and Suspects directory created")
-    # print ("Successfully created the directories %s and %s" % storage, Suspects)
 
 face_locations = []
 face_encodings = []
@@ -33,7 +43,8 @@ face_names = []
 suspicion_levels = []
 process_this_frame = True
 suspect_num = 0
-priority = "0"
+#priority = "0"#******
+priority = 0
 solid = True
 initial = True
 
@@ -69,6 +80,7 @@ while True:
 
         face_names = []
         for face_encoding in face_encodings:
+            
             # See if the face is a match for the known face(s)
             matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             name = "Unknown"
@@ -78,28 +90,29 @@ while True:
             if True in matches:
                 first_match_index = matches.index(True)
                 name = known_face_names[first_match_index]
-                # print(str(suspicion_levels[first_match_index]))
+               
                 #only inciment priority once every 10 frames
-                suspicion_levels[first_match_index] += 1
-                if suspicion_levels[first_match_index]%10 == 0:
-                    priority = int(suspicion_levels[first_match_index]/10)
+                if looking:
+                    suspicion_levels[first_match_index] += 1
+                if suspicion_levels[first_match_index]%2 == 0:
+                    if looking:
+                        priority = int(suspicion_levels[first_match_index]/5)
+                        
                     if solid:
                         solid = False
                     else:
                         solid = True
                     # print(str(priority))
 
-                #Clean out duplicates from storage container every 30 seconds
-                # if suspicion_levels[first_match_index]%30 == 0:
-                #     cleanUp()
 
             #If it wasn't add person jpg
             else:
                 suspect_num += 1
+               
                 cv2.imwrite(storage + "/suspect_" + str(suspect_num) + ".jpg", frame)
                 #load captured image
                 suspect_image = face_recognition.load_image_file(storage + "/suspect_" + str(suspect_num) + ".jpg")
-                if len(face_recognition.face_encodings(suspect_image))>=1:
+                if len((face_recognition.face_encodings(suspect_image)))!=0:
                     suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
                     #Initialize suspition level
                     suspicion_levels.append(0)
@@ -108,8 +121,7 @@ while True:
                     known_face_encodings.append(suspect_face_encoding)
                     known_face_names.append("SUSPECT_" + str(suspect_num))
                 else:
-                    print("ERROR: Image captured but no person detected")
-                
+                    print("Error: Image Captured but no people detected to encode")
 
 
             face_names.append(name)
@@ -119,8 +131,6 @@ while True:
 
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
-        # Draw lines on facial features
-        # frame = face_forward.isLookingForward(frame)
         
         # Blow the box to the size of video feed
         top *= t
@@ -128,7 +138,7 @@ while True:
         bottom *= t
         left *= t
 
-        priority = int(priority)
+        #priority = int(priority)#*********
         #Set color of bounding box
         TextColor = (255, 255, 255)
         if priority < 5:
@@ -153,11 +163,32 @@ while True:
                 TextColor = (0, 0, 0)
 
         #Get pos of nose    
-        center = int((left+right)/2), int((top+(bottom - 25))/2)
+        center = int((left+right)/2), int((top+(bottom))/2)
         #Get radius
-        radius = int(((bottom-70) - top)/5)
-        
-        #nose[] = face_forward.getNose(frame)
+        radius = int(((bottom) - top)/6)
+        #Get nose point and bridge points
+        ff = face_forward.facial_coordinates(frame)
+        looking = True
+        #If we did find a face and facial features
+        if ff : 
+            noseBridgePts = ff[0]
+            nosePointPts = ff[1]
+            #Check if all nose point tips are in the circle
+            for x in nosePointPts:
+                inCircle1 = face_forward.nose_inCircle(x, center, radius)
+                #cv2.line(frame,center,x, (255,255,255),1)
+                if inCircle1 == False:
+                    looking = False
+            #Check if the low nose bridge point is in the circle
+            inCircle2 = face_forward.nose_inCircle(noseBridgePts[3], center, radius)
+            #cv2.line(frame,center,noseBridgePts[3], (255,255,255),1)
+            if inCircle2 == False:
+                looking = False
+
+        if not looking:    
+            #Not looking
+            color = (255,255,255)
+            TextColor = (0,0,0)
 
         # Draw a bounding box around the face
         cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
@@ -165,20 +196,26 @@ while True:
 
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 70), (right, bottom), color, cv2.FILLED)
-        cv2.circle(frame,center, radius, (255,255,255),  thickness=4)
+        if drawCricle:
+            cv2.circle(frame,center, radius, color)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 38), font, 1.2, TextColor, 1)
-        cv2.putText(frame, "Priority: " +  str(priority), (left + 6, bottom - 6), font, 0.8, TextColor, 1)
+        priorityStr = str(math.floor(priority))
+        #cv2.putText(frame, "Priority: " +  str(priority), (left + 6, bottom - 6), font, 0.8, TextColor, 1)
+        cv2.putText(frame, "Priority: " +  priorityStr, (left + 6, bottom - 6), font, 0.8, TextColor, 1)
 
     # Display the resulting image
     cv2.imshow('Live Feed', frame)
 
     if priority == 30:
-        #Send image notification
-        cv2.imwrite(Suspects + "/suspect_" + ".jpg", frame)
+        #Send image notification(
+        print("Notification Sent")
+        cv2.imwrite(Suspects + "/suspect.jpg", frame)
 
     # Hit 'q' on the keyboard to quit!
     if cv2.waitKey(1) & 0xFF == ord('q'):
+        #kill localhost server
+        os.system('killall -9 php')
         break
 
     # Resize with numbers
@@ -190,6 +227,13 @@ while True:
         if video_size > 1:
             video_size -= 1
         print("Video_size is: "+ str(video_size))
+
+    #Draw Circle
+    if cv2.waitKey(1) & 0xFF == ord('c'):
+        if not drawCricle:
+            drawCricle = True
+        else:
+            drawCricle = False
 
 
 # Release handle to the webcam

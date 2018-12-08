@@ -1,0 +1,1 @@
+gnome-terminal -x killall -9 php
