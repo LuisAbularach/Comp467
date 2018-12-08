@@ -12,14 +12,17 @@ import argparse
 drawCricle = False
 video_size = 2
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--detection-method", type=str, default="hog",
-                help="face detection model to use: either `hog` (light) or `cnn` (heavy)")
+# Checks if a face encoding exists in current known face encodings
+def checkDupe(face_encoding):
+    results = face_recognition.compare_faces(known_face_encodings, face_encoding)
+    if(not True in results):
+        return False
+    else:
+        return True
 
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
-args = vars(ap.parse_args())
 
 # Create arrays of known face encodings and their names
 known_face_encodings = []
@@ -114,6 +117,12 @@ while True:
                 suspect_image = face_recognition.load_image_file(storage + "/suspect_" + str(suspect_num) + ".jpg")
                 if len((face_recognition.face_encodings(suspect_image)))!=0:
                     suspect_face_encoding = face_recognition.face_encodings(suspect_image)[0]
+                    # Removes frame from storage if encoding returns duplicate
+                    if(checkDupe(suspect_face_encoding)):
+                        print("captured frame is a duplicate. Removing...")
+                        os.remove(storage + "/suspect_" + str(suspect_num) + ".jpg")
+                        suspect_num -= 1
+                        continue
                     #Initialize suspition level
                     suspicion_levels.append(0)
                     print("Suspect priorities: "+ str(suspicion_levels))
@@ -165,7 +174,7 @@ while True:
         #Get pos of nose    
         center = int((left+right)/2), int((top+(bottom))/2)
         #Get radius
-        radius = int(((bottom) - top)/6)
+        radius = int(((bottom) - top)/7)
         #Get nose point and bridge points
         ff = face_forward.facial_coordinates(frame)
         looking = True
@@ -176,12 +185,14 @@ while True:
             #Check if all nose point tips are in the circle
             for x in nosePointPts:
                 inCircle1 = face_forward.nose_inCircle(x, center, radius)
-                #cv2.line(frame,center,x, (255,255,255),1)
+                if drawCricle:
+                    cv2.line(frame,center,x, (255,255,255),1)
                 if inCircle1 == False:
                     looking = False
             #Check if the low nose bridge point is in the circle
             inCircle2 = face_forward.nose_inCircle(noseBridgePts[3], center, radius)
-            #cv2.line(frame,center,noseBridgePts[3], (255,255,255),1)
+            if drawCricle:    
+                cv2.line(frame,center,noseBridgePts[3], (255,255,255),1)
             if inCircle2 == False:
                 looking = False
 
@@ -197,7 +208,7 @@ while True:
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 70), (right, bottom), color, cv2.FILLED)
         if drawCricle:
-            cv2.circle(frame,center, radius, color)
+            cv2.circle(frame,center, radius, (255,255,255))
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 38), font, 1.2, TextColor, 1)
         priorityStr = str(math.floor(priority))
@@ -207,7 +218,7 @@ while True:
     # Display the resulting image
     cv2.imshow('Live Feed', frame)
 
-    if priority == 30:
+    if priority == 30 and priority < 35:
         #Send image notification(
         print("Notification Sent")
         cv2.imwrite(Suspects + "/suspect.jpg", frame)
