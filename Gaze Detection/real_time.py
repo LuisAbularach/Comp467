@@ -148,9 +148,9 @@ while True:
                 TextColor = (0, 0, 0)
 
         #Get pos of nose    
-        center = int((left+right)/2), int((top+(bottom - 20))/2)
+        center = int((left+right)/2), int((top+(bottom))/2)
         #Get radius
-        radius = int(((bottom - 20) - top)/5)
+        radius = int(((bottom) - top)/6)
         #Get nose point and bridge points
         ff = face_forward.facial_coordinates(frame)
         looking = True
